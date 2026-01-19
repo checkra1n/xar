@@ -507,7 +507,20 @@ xar_t xar_fdopen_digest_verify(int fd, int32_t flags, void *expected_toc_digest,
 	// If there are hardlinks, the path we pick is the most recently opened by
 	// the filesystem; which is effectively random.
 	char path_buff[PATH_MAX];
-	if (fcntl(fd, F_GETPATH, path_buff) < 0) {
+#if defined(__APPLE__)
+	if (fcntl(fd, F_GETPATH, path_buff) < 0)
+#elif defined(__linux__)
+	char link[PATH_MAX];
+	int r = snprintf(link, sizeof(link), "/proc/self/fd/%d", fd);
+	if(r > 0 && r < PATH_MAX && (r = readlink(link, path_buff, sizeof(path_buff) - 1)) > 0 && path_buff[0] == '/')
+	{
+		path_buff[r] = '\0';
+	}
+	else
+#else
+#	error Unsupported F_GETPATH
+#endif
+	{
 		close(fd);
 		return NULL;
 	}
