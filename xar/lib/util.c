@@ -588,6 +588,7 @@ size_t xar_optimal_io_size_at_path(const char *path)
 	// Start at 1MiB
 	size_t optimal_rsize = 1024 * 1024;
 	
+#ifdef __APPLE__
 	// Stat the destination of the archive to determine the optimal fs operation size
 	struct statfs target_mount_stat_fs;
 	if ( statfs(path, &target_mount_stat_fs) == 0 )
@@ -615,6 +616,7 @@ size_t xar_optimal_io_size_at_path(const char *path)
 			optimal_rsize = fs_iosize;
 		}
 	}
+#endif
 	
 	return optimal_rsize;
 }
